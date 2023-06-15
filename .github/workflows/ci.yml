@@ -1,0 +1,89 @@
+name: Continuous Integration
+# run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "🎉 Let's start the build!"
+
+      # We are caching node_modules directory
+      - name: Cache Node Modules
+        id: cache
+        uses: actions/cache@v3
+        with: 
+          path: node_modules
+          key: node-modules-cache
+      
+      # Download the code from the repo
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # Install the version of node that we know it works with that code
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+
+      # Install dependencies. This would generate the "node_modules" directory and will be cached for future installs
+      - name: Install Deps
+        run: cd backend && npm i
+
+      # Build the code. This would create the "build" directory in the current directory
+      - name: Build
+        run: cd backend && npm run build
+
+      # Generate artifact (zip build directory)
+      - name: Generate Artifacts
+        run: cd backend/build && zip -r artifact.zip ./ -x '*.git*'
+
+      # Upload the artifact somewhere to github echosphere
+      - name: Upload/store Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-artifact
+          path: ${{ github.workspace }}/backend/build/artifact.zip
+  
+  # Lint the code to see whether the standards defined by the team are met.
+  lint:
+    needs: [build] # This is defining dependency on the "build" job defined above
+    runs-on: ubuntu-latest
+    steps:
+      # We have to checkout every single time
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # benefit from the existing cache, and avoid re-download from scratch 
+      - name: Cache Node Modules
+        id: cache-node-modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node-modules-cache
+
+      # Install the dependencies only if it didn't hit the cache. steps.cache-node-modules refers to the id of the previous step.
+      - name: Install Dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: cd backend && npm i
+
+      # Lint the code with npm run lint
+      - name: Lint the code
+        run: cd backend && npm run lint
+
+      # - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      # - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+      # - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+      # - name: Check out repository code
+      #   uses: actions/checkout@v3
+      # - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
+      # - run: echo "🖥️ The workflow is now ready to test your code on the runner."
+      # - name: List files in the repository
+      #   run: |
+      #     ls ${{ github.workspace }}
+      # - name: npm install
+      #   run: cd backend && npm i
+      # - name: npm build
+      #   run: cd backend && npm run build
+      # - run: ls .
+      - run: echo "🍏 This job's status is ${{ job.status }}."
