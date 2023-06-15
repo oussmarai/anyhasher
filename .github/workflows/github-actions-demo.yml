@@ -34,16 +34,31 @@ jobs:
       - name: Build
         run: cd backend && npm run build
 
-      # 
+      # - name: Generate artifact name
+      #   id: generate-name
+      #   run: |
+      #     echo "::set-output name=artifact::${{ github.event.repository.name }}.${{ github.ref_name }}.${{ github.run_id }}.zip"
+
+      # - name: Upload artifact
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: ${{ steps.generate-name.outputs.artifact }}
+      #     path: ./README.md
+
+      # Generate artifact (zip build directory)
       - name: Generate Artifacts
         run: cd backend/build && zip -r artifact.zip ./ -x '*.git*'
+        # uses: actions/upload-artifact@v1
+          # with:
+          #   name: my-artifact
+          #   path: ${{ github.workspace }}/result.zip
 
-      # 
-      - name: Store Artifact
-        uses: actions/upload-artifact@v2
+      # Upload the artifact somewhere to github echosphere
+      - name: Upload/store Artifact
+        uses: actions/upload-artifact@v3
         with:
           name: backend-artifact
-          path: cd backend/build/artifact.zip
+          path: ${{ github.workspace }}/backend/build/artifact.zip
 
 
       # - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
