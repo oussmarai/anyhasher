@@ -11,18 +11,18 @@ jobs:
       # We are caching node_modules directory
       - name: Cache Node Modules
         id: cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with: 
           path: node_modules
           key: node-modules-cache
       
       # Download the code from the repo
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v3
 
       # Install the version of node that we know it works with that code
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 16.x
 
