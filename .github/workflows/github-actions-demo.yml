@@ -28,4 +28,6 @@ jobs:
       - name: List files in the repository
         run: |
           ls ${{ github.workspace }}
+      - run: cd backend && ls .
+      - run: ls .
       - run: echo "🍏 This job's status is ${{ job.status }}."
