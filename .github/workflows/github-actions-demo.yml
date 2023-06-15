@@ -28,6 +28,9 @@ jobs:
       - name: List files in the repository
         run: |
           ls ${{ github.workspace }}
-      - run: cd backend && ls .
+      - name: npm install
+        run: cd backend && npm i
+      - name: npm build
+        run: cd backend && npm run build
       - run: ls .
       - run: echo "🍏 This job's status is ${{ job.status }}."
