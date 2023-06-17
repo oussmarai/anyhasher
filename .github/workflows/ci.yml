@@ -70,6 +70,32 @@ jobs:
       # Lint the code with npm run lint
       - name: Lint the code
         run: cd backend && npm run lint
+  
+  # Lint the code to see whether the code adhere to the style and standards defined by the team.
+  test:
+    needs: [build] # This is defining dependency on the "build" job defined above
+    runs-on: ubuntu-latest
+    steps:
+      # We have to checkout every single time
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # benefit from the existing cache, and avoid re-download from scratch 
+      - name: Cache Node Modules
+        id: cache-node-modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node-modules-cache
+
+      # Install the dependencies only if it didn't hit the cache. steps.cache-node-modules refers to the id of the previous step.
+      - name: Install Dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: cd backend && npm i
+
+      # Lint the code with npm run lint
+      - name: Run Unit Tests
+        run: cd backend && npm t
 
       # - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       # - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
