@@ -45,7 +45,7 @@ jobs:
           name: backend-artifact
           path: ${{ github.workspace }}/backend/build/artifact.zip
   
-  # Lint the code to see whether the standards defined by the team are met.
+  # Lint the code to see whether the code adhere to the style and standards defined by the team.
   lint:
     needs: [build] # This is defining dependency on the "build" job defined above
     runs-on: ubuntu-latest
