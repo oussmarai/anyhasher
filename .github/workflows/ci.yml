@@ -125,7 +125,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Initialize CodeQL
+      - name: Initialize CodeQL v1
         uses: github/codeql-action/init@v1
         with:
           language: javascript
