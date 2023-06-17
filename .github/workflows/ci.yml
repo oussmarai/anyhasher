@@ -1,8 +1,10 @@
 name: Continuous Integration
+run-name: "🛠️ CI: ${{ github.event.head_commit.message }} (${{ github.sha }})"
 # run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 on: [push]
 jobs:
   build:
+    name: 🛠️ Build Backend Artifact
     runs-on: ubuntu-latest
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
@@ -47,6 +49,7 @@ jobs:
   
   # Lint the code to see whether the code adhere to the style and standards defined by the team.
   lint:
+    name: 🕵️ Lint Backend Code
     needs: [build] # This is defining dependency on the "build" job defined above
     runs-on: ubuntu-latest
     steps:
@@ -71,8 +74,9 @@ jobs:
       - name: Lint the code
         run: cd backend && npm run lint
   
-  # Lint the code to see whether the code adhere to the style and standards defined by the team.
+  # Run unit tests
   test:
+    name: 🧪 Backend Unit Tests
     needs: [build] # This is defining dependency on the "build" job defined above
     runs-on: ubuntu-latest
     steps:
@@ -96,6 +100,51 @@ jobs:
       # Lint the code with npm run lint
       - name: Run Unit Tests
         run: cd backend && npm t
+
+  
+  # Run security audit
+  security-audit:
+    name: 🛡️ Audit Backend Packages for Security Vulnerabilities
+    needs: [build] # This is defining dependency on the "build" job defined above
+    runs-on: ubuntu-latest
+    steps:
+      # We have to checkout every single time
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # Check whether we are using vulnerable packages in our code with npm audit --audit-level=medium
+      - name: Check for security issue
+        run: cd backend && npm audit --audit-level=medium
+  
+  static-analysis:
+    name: 🔬 Run Static Analysis on Backend Code
+    needs: [build]
+    runs-on: ubuntu-latest
+    # permissions:
+    #   security-events: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          config-file: ./.github/codeql/codeql.config.yml
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+
+      - name: Install Deps
+        run: cd backend && npm i
+
+      - name: Build
+        run: cd backend && npm run build
+
+      - name: Perform Analysis
+        uses: github/codeql-action/analyze@v1
+
+
 
       # - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       # - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
