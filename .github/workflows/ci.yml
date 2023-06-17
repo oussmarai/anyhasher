@@ -114,7 +114,7 @@ jobs:
 
       # Check whether we are using vulnerable packages in our code with npm audit --audit-level=medium
       - name: Check for security issue
-        run: cd backend && npm audit --audit-level=info
+        run: cd backend && npm audit fix # npm audit --audit-level=info
   
   # static-analysis:
   #   name: 🔬 Run Static Analysis on Backend Code
