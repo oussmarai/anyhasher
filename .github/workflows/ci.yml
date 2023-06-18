@@ -5,6 +5,7 @@ on: [push]
 jobs:
   build:
     name: 🛠️ Build Backend Artifact
+    needs: [static-analysis]
     runs-on: ubuntu-latest
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
@@ -118,7 +119,7 @@ jobs:
   
   static-analysis:
     name: 🔬 Run Static Analysis on Backend Code
-    needs: [build]
+    # needs: [build]
     runs-on: ubuntu-latest
     permissions:
       security-events: write
@@ -136,12 +137,12 @@ jobs:
         with:
           node-version: 16.x
 
-      - name: Cache Node Modules
-        id: cache
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: node-${{ hashFiles('**/package-lock.json') }}
+      # - name: Cache Node Modules
+      #   id: cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: node_modules
+      #     key: node-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install Deps
         run: cd backend && npm i
