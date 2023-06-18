@@ -5,7 +5,6 @@ on: [push]
 jobs:
   build:
     name: 🛠️ Build Backend Artifact
-    needs: [static-analysis]
     runs-on: ubuntu-latest
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
@@ -117,24 +116,22 @@ jobs:
       - name: Check for security issue
         run: cd backend && npm audit --audit-level=none # npm audit fix # 
   
+  # To run the code analysis, the visibility of the repository has to be "Public" 
   static-analysis:
     name: 🔬 Run Static Analysis on Backend Code
-    # needs: [build]
+    needs: [build]
     runs-on: ubuntu-latest
     permissions:
       security-events: write
     steps:
-      - run: echo "step 1"
       - uses: actions/checkout@v3
 
-      - run: echo "step 2"
       - name: Initialize CodeQL v1
         uses: github/codeql-action/init@v2
         with:
           language: javascript
           #config-file: ./.github/codeql/codeql.config.yml
 
-      - run: echo "step 3"
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
@@ -147,19 +144,14 @@ jobs:
       #     path: node_modules
       #     key: node-${{ hashFiles('**/package-lock.json') }}
 
-      - run: echo "step 4"
       - name: Install Deps
         run: cd backend && npm i
 
-      - run: echo "step 5"
       - name: Build
         run: cd backend && npm run build
 
-      - run: echo "step 6"
       - name: Perform Analysis
         uses: github/codeql-action/analyze@v2
-
-      - run: echo "step 7"
 
       # - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       # - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
