@@ -124,14 +124,17 @@ jobs:
     permissions:
       security-events: write
     steps:
+      - run: echo "step 1"
       - uses: actions/checkout@v3
 
+      - run: echo "step 2"
       - name: Initialize CodeQL v1
         uses: github/codeql-action/init@v2
         with:
           language: javascript
           #config-file: ./.github/codeql/codeql.config.yml
 
+      - run: echo "step 3"
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
@@ -144,12 +147,15 @@ jobs:
       #     path: node_modules
       #     key: node-${{ hashFiles('**/package-lock.json') }}
 
+      - run: echo "step 4"
       - name: Install Deps
         run: cd backend && npm i
 
+      - run: echo "step 5"
       - name: Build
         run: cd backend && npm run build
 
+      - run: echo "step 6"
       - name: Perform Analysis
         uses: github/codeql-action/analyze@v2
 
