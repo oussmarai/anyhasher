@@ -159,7 +159,7 @@ jobs:
       - name: Perform Analysis
         uses: github/codeql-action/analyze@v2
 
-
+      - run: echo "step 7"
 
       # - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       # - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
