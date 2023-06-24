@@ -15,11 +15,12 @@ on:
   types:
     - completed
 
-# # This concurrency group for deploy is "prod-green"
-# # TODO: I need to understand this more
-# concurrency:
-#   group: "prod-green" # ${{ github.run_id }}
-#   cancel-in-progress: true
+# This concurrency group for deploy is "prod-green"
+# TODO: I need to understand this more
+concurrency:
+  group: ${{ github.run_id }} # "prod-green" # 
+  cancel-in-progress: true
+
 
 jobs:
   provision_backend:
