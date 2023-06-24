@@ -1,0 +1,238 @@
+name: Deploy
+run-name: "🚛 CD: Deploy Artifacts (${{ github.event.inputs.ref }})"
+on:
+  # Other workflows sending and triggering this workflow.
+  # Also, trigger this manually on GitHub Actions using a button
+  workflow_dispatch:
+    inputs:
+      ref:
+        required: true
+
+  # This workflow is listening on other workflows to reach some sort of milestone or event (in this case, completed milestone on both Backend and Frontend CIs) 
+  workflow_run:
+    - Backend CI
+    # - Frontend CI
+  types:
+    - completed
+
+# This concurrency group for deploy is "prod-green"
+# TODO: I need to understand this more
+concurrency:
+  group: "prod-green" # ${{ github.run_id }}
+  cancel-in-progress: true 
+
+jobs:
+  provision_backend:
+    name: 🏢 Provision Backend Infrastructure
+    runs-on: ubuntu-latest
+    outputs:
+      backend_url: http://${{ steps.provision.outputs.ec2_public_url }}:5001
+      backend_host: ${{ steps.provision.outputs.ec2_public_url }}
+      # url: ${{ steps.be_infra.outputs.backend_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.ref }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        # with:
+        #   terraform_wrapper: false
+        #   terraform_version: 1.2.9
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      # - name: Create Backend Infrastructure
+      #   id: be_infra
+      #   run: |
+      #     cd util/terraform/backend
+      #     # create a text file named "terraform.tfvars" that contains variables (similar to .env file) to be used by terraform
+      #     # instance_name must be defined as input variable in terraform
+      #     echo "instance_name=\"anyhasher-backend-${{ github.run_number }}\"" >> terraform.tfvars
+      #     terraform init
+      #     terraform plan
+      #     terraform apply -auto-approve
+      #     # Get/Extract the public ip of the created ec2 instance from the output file of terraform
+      #     # EC2_PUBLIC_IP must be defined as output in terraform
+      #     export EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip)
+      #     # Save the public ip of the created ec2 instance into GitHub env file in a variable named EC2_HOST to give us access to the data in another context
+      #     echo "EC2_HOST=${EC2_PUBLIC_IP}" >> $GITHUB_ENV
+      #     # Here, we are just making data available in another context (later we use these variables with Ansible and smoke testing)
+      #     echo "::set-output name=backend_url::$EC2_PUBLIC_IP"
+
+      - name: Use commit workspace
+        uses: dflook/terraform-new-workspace@v1
+        with:
+          path: util/terraform/backend
+          workspace: anyhasher-backend-${{ github.event.inputs.ref }}
+
+      - name: Provision
+        id: provision
+        uses: dflook/terraform-apply@v1
+        with:
+          workspace: anyhasher-backend-${{ github.event.inputs.ref }}
+          auto_approve: true
+          path: util/terraform/backend
+          variables: |
+            instance_name = "anyhasher-backend-${{ github.event.inputs.ref }}"
+      
+      - name: Print out some variables
+        run: |
+          echo ${{ github.workspace }}
+          echo ${{ github.event.inputs.ref }}
+          echo ${{ steps.provision.outputs.ec2_public_url }}
+          echo http://${{ steps.provision.outputs.ec2_public_url }}:5001
+  
+  provision_frontend:
+    name: 🏛️ Provision Frontend Infrastructure
+    outputs:
+      frontend_url: http://${{ steps.provision.outputs.website_endpoint }}
+      s3_bucket_hostname: ${{ steps.provision.outputs.website_endpoint }}
+      bucket_name: ${{ steps.provision.outputs.bucket_name }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        # with:
+        #   terraform_wrapper: false
+        #   terraform_version: 1.2.9
+
+      # - name: Create Frontend Infrastructure
+      #   id: fe_infra
+      #   run: |
+      #     cd util/terraform/frontend
+      #     # Create a text file named "terraform.tfvars" that contains variables (similar to .env file) to be used by terraform
+      #     # bucket_name must be defined as input variable in terraform
+      #     echo "bucket_name=\"anyhasher-frontend-${{ github.run_number }}\"" >> terraform.tfvars
+      #     terraform init
+      #     terraform plan
+      #     terraform apply -auto-approve
+      #     # S3_BUCKET_NAME and S3_URL must be outputs in terraform
+      #     export S3_BUCKET_NAME=$(terraform output -raw bucket_name)
+      #     echo S3_URL=$(terraform output -raw website_endpoint)
+      #     echo "::set-output name=frontend_url::$S3_URL"
+
+      - name: Use commit workspace
+        uses: dflook/terraform-new-workspace@v1
+        with:
+          path: util/terraform/frontend
+          workspace: anyhasher-frontend-${{ github.event.inputs.ref }}
+
+      - name: Provision
+        id: provision
+        uses: dflook/terraform-apply@v1
+        with:
+          workspace: anyhasher-frontend-${{ github.event.inputs.ref }}
+          auto_approve: true
+          path: util/terraform/frontend
+          variables: |
+            bucket_name = "anyhasher-frontend-${{ github.event.inputs.ref }}"
+
+  deploy_backend:
+    name: 🚛 Deploy Backend Artifact
+    needs: [provision_backend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Get Backend Artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: build.yml
+          name: backend-artifact-${{ github.event.inputs.ref }}
+          path: backend/build/
+
+      - name: Configure Backend Infrastructure
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: deploy.yml
+          directory: ./util/ansible
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          inventory: |
+            [ec2]
+            ${{ needs.provision_backend.outputs.backend_host }} ansible_user=ubuntu
+          options: |
+            --verbose
+
+      #- name: Simulate an error
+      #run: exit 1
+
+  deploy_frontend:
+    name: 🚚 Deploy Frontend Artifact
+    needs: [provision_backend, provision_frontend, deploy_backend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Frontend Artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: build.yml
+          name: frontend-artifact-${{ github.event.inputs.ref }}
+          path: frontend/build
+
+      - name: Prepare frontend with backend url
+        uses: jacobtomlinson/gha-find-replace@v2
+        with:
+          find: "http://localhost:5000"
+          replace: "${{ needs.provision_backend.outputs.backend_url }}"
+          regex: false
+
+      - name: Store Release Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-release-${{ github.event.inputs.ref }}
+          path: frontend/build
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Upload frontend to S3 Bucket
+        run: |
+          aws s3 cp frontend/build s3://${{ needs.provision_frontend.outputs.bucket_name }} --region=us-east-1 --recursive
+
+  trigger_verify:
+    name: 🧪 Start Environment Verification
+    needs:
+      [provision_frontend, deploy_frontend, provision_backend, deploy_backend]
+    runs-on: ubuntu-latest
+    if: success()
+    permissions: write-all
+    steps:
+      - name: Dispatch
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: Verify
+          inputs: '{ "backend_url": "${{ needs.provision_backend.outputs.backend_url }}", "frontend_url": "${{ needs.provision_frontend.outputs.frontend_url }}", "s3_bucket_hostname": "${{ needs.provision_frontend.outputs.s3_bucket_hostname }}", "ref": "${{ github.event.inputs.ref }}" }'
+
+  trigger_cleanup_on_failure:
+    name: ⛔ Start Cleanup for Failing Environment
+    needs:
+      [provision_frontend, deploy_frontend, provision_backend, deploy_backend]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: Cleanup
+          inputs: '{ "ref": "${{ github.event.inputs.ref }}", "env_name": "⛔ Detroy Green Env after Failed Deployment" }'

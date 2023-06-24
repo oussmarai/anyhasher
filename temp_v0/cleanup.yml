@@ -20,6 +20,9 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
+        # with:
+        #   terraform_wrapper: false
+        #   terraform_version: 1.2.9
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -36,6 +39,14 @@ jobs:
           variables: |
             bucket_name = "anyhasher-frontend-${{ github.event.inputs.ref }}"
 
+      # - name: Destroy Frontend Infrastructure
+      #   id: fe_infra
+      #   run: |
+      #     cd util/terraform/frontend
+      #     echo "bucket_name=\"anyhasher-frontend-${{ github.run_number }}\"" >> terraform.tfvars
+      #     terraform init
+      #     terraform destroy -auto-approve
+
   destroy_backend:
     name: ❌ Destroy Backend Infrastructure
     runs-on: ubuntu-latest
@@ -47,6 +58,9 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
+        # with:
+        #   terraform_wrapper: false
+        #   terraform_version: 1.2.9
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -62,6 +76,14 @@ jobs:
           workspace: anyhasher-backend-${{ github.event.inputs.ref }}
           variables: |
             instance_name = "anyhasher-backend-${{ github.event.inputs.ref }}"
+
+      # - name: Destroy Backend Infrastructure
+      #   id: be_infra
+      #   run: |
+      #     cd util/terraform/backend
+      #     echo "instance_name=\"anyhasher-backend-${{ github.run_number }}\"" >> terraform.tfvars
+      #     terraform init
+      #     terraform destroy -auto-approve
 
   cleanup_tag:
     name: Clean up the old blue tag

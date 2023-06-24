@@ -36,7 +36,8 @@ jobs:
       - name: Build
         run: cd backend && npm run build
 
-      # Generate artifact (zip build directory)
+      # Generate artifact (zip build directory).
+      # This works fine on GitHub, but causes failure when deploying to Elastic Beanstalk in AWS.
       - name: Generate Artifacts
         run: cd backend/build && zip -r artifact.zip ./ -x '*.git*'
 

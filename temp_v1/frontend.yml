@@ -1,0 +1,103 @@
+name: Frontend CI
+run-name: "🛠️ CI: ${{ github.event.head_commit.message }} (${{ github.sha }})"
+on:
+  pull_request:
+  push:
+
+jobs:
+  build:
+    name: 🛠️ Build Frontend Artifact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cache Node Modules
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node-modules-cache
+          # key: fe-node-${{ hashFiles('frontend/package-lock.json') }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+
+      - name: Install Deps
+        run: cd frontend && npm i
+
+      - name: Build
+        run: |
+          export REACT_APP_API_HOST=__BACKEND_URL__PLACEHOLDER__
+          cd frontend && npm run build
+      
+      - name: Store Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-build
+          # name: frontend-artifact-${{ github.sha }}
+          path: frontend/build
+
+  security-audit:
+    name: 🛡️ Audit Frontend Packages for Security Vulnerabilities
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Check for security issue
+        run: cd frontend && npm audit --audit-level=critical
+        # run: cd frontend && npm audit --production --audit-level=critical
+
+  static-analysis:
+    name: 🔬 Run Static Analysis on Frontend Code
+    needs: [security-audit]
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v3
+
+      # - name: Initialize CodeQL
+      #   uses: github/codeql-action/init@v2
+      #   with:
+      #     languages: javascript
+      #     # config-file: ./.github/codeql/codeql.config.yml
+
+      # - name: Setup Node
+      #   uses: actions/setup-node@v3
+      #   with:
+      #     node-version: 16.x
+
+      # - name: Cache Node Modules
+      #   id: cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: node_modules
+      #     key: node-modules-cache
+      #     # key: node-${{ hashFiles('**/package-lock.json') }}
+
+      # - name: Install Deps
+      #   run: cd frontend && npm i
+
+      # - name: Build
+      #   run: cd frontend && npm run build
+
+      # # - name: Perform Analysis
+      # #   uses: github/codeql-action/analyze@v2
+
+  trigger-deploy:
+    name: 🚚 Start Deployment
+    if: github.ref == 'refs/heads/main'
+    needs: [static-analysis]
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - name: Dispatch
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: Deploy
+          inputs: '{ "ref": "${{ github.sha }}" }'

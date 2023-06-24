@@ -6,6 +6,16 @@ on:
       ref:
         required: true
 
+  workflow_run:
+    - Backend CI
+    - Frontend CI
+  types:
+    - completed
+
+concurrency:
+  group: ${{ github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   provision_backend:
     name: 🏢 Provision Backend Infrastructure
