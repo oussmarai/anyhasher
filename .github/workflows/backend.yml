@@ -2,20 +2,20 @@ name: Backend CI
 run-name: "🛠️ CI: ${{ github.event.head_commit.message }} (${{ github.sha }})"
 on:
   push:
-    paths:
-      - 'backend/**'
-      - '.github/workflows/backend.yml'
-    branches:
-      - main
-      - l4
+    # paths:
+    #   - 'backend/**'
+    #   - '.github/workflows/backend.yml'
+    # branches:
+    #   - main
+    #   - l4
    
   pull_request:
-    paths:
-      - 'backend/**'
-      - '.github/workflows/backend.yml'
-    branches:
-      - main
-      - l4
+    # paths:
+    #   - 'backend/**'
+    #   - '.github/workflows/backend.yml'
+    # branches:
+    #   - main
+    #   - l4
 
 concurrency:
   group: ${{ github.run_id }}
