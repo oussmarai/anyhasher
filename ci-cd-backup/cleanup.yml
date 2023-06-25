@@ -1,19 +1,14 @@
 name: Cleanup
-run-name: "❌ Destroy Infrastructure: ${{ github.event.inputs.env_name }} (${{ github.event.inputs.ref }})"
+run-name: "❌ Destroy Infrastructure ${{ github.event.inputs.env_name }} (${{ github.event.inputs.ref }})"
 on:
   push:
 
-  workflow_dispatch:
-    inputs:
-      ref:
-        required: true
-      env_name:
-        required: true
-
-  # This workflow is listening on other workflows to reach some sort of milestone or event (in this case, completed milestone on both Backend and Frontend CIs)
-  workflow_run:
-    workflows: [Backend CI, Deploy] # , Frontend CI
-    types: [completed]
+  # workflow_dispatch:
+  #   inputs:
+  #     ref:
+  #       required: true
+  #     env_name:
+  #       required: true
 
 concurrency:
   group: ${{ github.run_id }}
@@ -48,29 +43,28 @@ jobs:
           echo ${{ github.sha }}
           echo ${{ github.run_id }}
           echo ${{ github.event.inputs.ref }}
-          echo ${{ github.event.inputs.env_name }}
           # This is a comment
 
       # - name: Use commit workspace
       #   uses: dflook/terraform-new-workspace@v1
       #   with:
       #     path: util/terraform/backend
-      #     workspace: ec2-backend-${{ github.event.inputs.ref }}
+      #     workspace: anyhasher-backend-${{ github.event.inputs.ref }}
     
       # - name: Destroy Backend
       #   uses: dflook/terraform-destroy@v1
       #   with:
-      #     workspace: ec2-backend-${{ github.event.inputs.ref }}
+      #     workspace: anyhasher-backend-${{ github.event.inputs.ref }}
       #     auto_approve: true
       #     path: util/terraform/backend
       #     variables: |
-      #       instance_name = "ec2-backend-${{ github.event.inputs.ref }}"
+      #       instance_name = "anyhasher-backend-${{ github.event.inputs.ref }}"
     
       - name: Destroy Backend Infrastructure
         id: be_infra
         run: |
           cd util/terraform/backend
-          echo "instance_name=\"ec2-backend-${{ github.run_number }}\"" >> terraform.tfvars
+          echo "instance_name=\"anyhasher-backend-${{ github.run_number }}\"" >> terraform.tfvars
           terraform init
           terraform destroy -auto-approve
 

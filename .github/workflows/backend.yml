@@ -1,0 +1,210 @@
+name: Backend CI
+run-name: "🛠️ CI: ${{ github.event.head_commit.message }} (${{ github.sha }})"
+on:
+  push:
+    # paths:
+    #   - 'backend/**'
+    #   - '.github/workflows/backend.yml'
+    # branches:
+    #   - main
+    #   - l4
+   
+  pull_request:
+    # paths:
+    #   - 'backend/**'
+    #   - '.github/workflows/backend.yml'
+    # branches:
+    #   - main
+    #   - l4
+
+concurrency:
+  group: ${{ github.run_id }}
+
+jobs:
+  build:
+    name: 🛠️ Build Backend Artifact
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Cache Node Modules
+        id: cache
+        # uses: actions/cache@v2
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node-modules-cache
+          # key: be-node-${{ hashFiles('backend/package-lock.json') }}
+      
+      - name: Checkout
+        # uses: actions/checkout@v1
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        # uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
+        with:
+          # node-versions: 16.*
+          node-versions: 16.x
+
+      - name: Install Deps
+        run: cd backend && npm i
+
+      - name: Build
+        run: cd backend && npm run build
+      
+      - name: Store Artifact
+        # uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-artifact
+          # name: backend-artifact-${{ github.sha }} # Dynamic file name
+          path: backend/build/
+
+  # Lint the code to see whether the code adhere to the style and standards defined by the team.
+  lint:
+    name: 🕵️ Lint Backend Code
+    needs: [build] # This is defining dependency on the "build" job defined above
+    runs-on: ubuntu-latest
+    steps:
+      # We have to checkout every single time
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # benefit from the existing cache, and avoid re-download from scratch 
+      - name: Cache Node Modules
+        id: cache-node-modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node-modules-cache
+          # key: be-node-${{ hashFiles('backend/package-lock.json') }}
+
+      # Install the dependencies only if it didn't hit the cache. steps.cache-node-modules refers to the id of the previous step.
+      - name: Install Dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: cd backend && npm i
+
+      # Lint the code with npm run lint
+      - name: Lint the code
+        run: cd backend && npm run lint
+  
+  # Run unit tests
+  test:
+    name: 🧪 Backend Unit Tests
+    needs: [build] # This is defining dependency on the "build" job defined above
+    runs-on: ubuntu-latest
+    steps:
+      # We have to checkout every single time
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # benefit from the existing cache, and avoid re-download from scratch 
+      - name: Cache Node Modules
+        id: cache-node-modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node-modules-cache
+          # key: be-node-${{ hashFiles('backend/package-lock.json') }}
+
+      # Install the dependencies only if it didn't hit the cache. steps.cache-node-modules refers to the id of the previous step.
+      - name: Install Dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: cd backend && npm i
+
+      # Lint the code with npm run lint
+      - name: Run Unit Tests
+        run: cd backend && npm t
+
+  
+  # Run security audit
+  security-audit:
+    name: 🛡️ Audit Backend Packages for Security Vulnerabilities
+    needs: [build] # This is defining dependency on the "build" job defined above
+    runs-on: ubuntu-latest
+    steps:
+      # We have to checkout every single time
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # Check whether we are using vulnerable packages in our code with npm audit --audit-level=medium
+      - name: Check for security issue
+        run: cd backend && npm audit --audit-level=none # npm audit fix # 
+        # run: cd backend && npm audit --production --audit-level=medium
+  
+  # To run the code analysis, the visibility of the repository has to be "Public" 
+  static-analysis:
+    name: 🔬 Run Static Analysis on Backend Code
+    needs: [build, lint, test, security-audit]
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v3
+
+      # - name: Initialize CodeQL v1
+      #   uses: github/codeql-action/init@v2
+      #   with:
+      #     language: javascript
+      #     # config-file: ./.github/codeql/codeql.config.yml
+
+      # - name: Setup Node
+      #   uses: actions/setup-node@v3
+      #   with:
+      #     node-version: 16.x
+
+      # - name: Install Deps
+      #   run: cd backend && npm i
+
+      # - name: Build
+      #   run: cd backend && npm run build
+
+      # - name: Perform Analysis
+      #   uses: github/codeql-action/analyze@v1
+
+  # # Here, the CI part finished
+  # # We will start the CD part by deploying to AWS Elastic Beanstalk
+  # deploy_to_aws_eb:
+  #   # This is very important to avoid deploying at each PR
+  #   # if : github.ref == 'refs/heads/main'
+  #   needs: [static-analysis,security-audit,lint,test]
+  #   runs-on: ubuntu-latest
+  #   # This step is providing a url output to the world
+  #   # outputs:
+  #   #   url: ${{ steps.deployment.outputs.page_url }}
+  #   steps:
+  #     - name: Get Artifact
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: backend-artifact
+  #         path: backend/build
+
+  #     # This step is specific to ASW EB. It basically tells AWS EB how to start the server, storing it in a procfile and put it inside the build folder.
+  #     - name: Prepare ProcFile
+  #       run: |
+  #         echo "web: node server.js" > backend/build/Procfile
+
+  #     # Prepare the zip file
+  #     - name: Prepare Zip File
+  #       run: cd backend/build && ls && zip -r artifact.zip ./ -x '*.git*'
+
+  #     - name: Deploy to AWS EB
+  #       # The id helps us to get outputs later on, if any.
+  #       id: deployment
+  #       uses: einaregilsson/beanstalk-deploy@v20
+  #       # with is a way to inject or pass arguments into the reusable action 
+  #       with:
+  #         aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }} # these secret key need to be added to GitHub secrets
+  #         aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY_ID }} # these secret key need to be added to GitHub secrets
+  #         application_name: AnyHasher # this has to be created manually in AWS EB
+  #         environment_name: AnyHasher-env # this has to be created manually in AWS EB
+  #         version_label: anyhasher-${{ github.run_number }} # can be anything, just something that has meaning to you.
+  #         region: us-east-1
+  #         deployment_package: backend/build/artifact.zip
+
+  # verify-production:
+  #   runs-on: latest-ubuntu
+  #   needs: [deploy_to_aws_eb]
+  #   # if: github.ref == 'refs/heads/main'
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v1

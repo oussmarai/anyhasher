@@ -5,15 +5,17 @@ on:
 
   # Other workflows sending and triggering this workflow.
   # Also, trigger this manually on GitHub Actions using a button
-  # workflow_dispatch:
-    # inputs:
-    #   ref:
-    #     required: true
+  workflow_dispatch:
+    inputs:
+      ref:
+        required: true
+      env_name:
+        required: true
 
   # This workflow is listening on other workflows to reach some sort of milestone or event (in this case, completed milestone on both Backend and Frontend CIs) 
-  # workflow_run:
-  #   workflows: [Backend CI] # , Frontend CI
-  #   types: [completed]
+  workflow_run:
+    workflows: [Backend CI] # , Frontend CI
+    types: [completed]
 
 # This concurrency group for deploy is "prod-green"
 # TODO: I need to understand this more
@@ -70,17 +72,17 @@ jobs:
         uses: dflook/terraform-new-workspace@v1
         with:
           path: util/terraform/backend
-          workspace: anyhasher-backend-${{ github.event.inputs.ref }}
+          workspace: ec2-backend-${{ github.event.inputs.ref }}
 
       - name: Provision
         id: provision
         uses: dflook/terraform-apply@v1
         with:
-          workspace: anyhasher-backend-${{ github.event.inputs.ref }}
+          workspace: ec2-backend-${{ github.event.inputs.ref }}
           auto_approve: true
           path: util/terraform/backend
           variables: |
-            instance_name = "anyhasher-backend-${{ github.event.inputs.ref }}"
+            instance_name = "ec2-backend-${{ github.event.inputs.ref }}"
       
       - name: Print out some variables
         run: |
@@ -95,7 +97,7 @@ jobs:
       #     cd util/terraform/backend
       #     # create a text file named "terraform.tfvars" that contains variables (similar to .env file) to be used by terraform
       #     # instance_name must be defined as input variable in terraform
-      #     echo "instance_name=\"anyhasher-backend-${{ github.run_number }}\"" >> terraform.tfvars
+      #     echo "instance_name=\"ec2-backend-${{ github.run_number }}\"" >> terraform.tfvars
       #     terraform init
       #     terraform plan
       #     terraform apply -auto-approve
