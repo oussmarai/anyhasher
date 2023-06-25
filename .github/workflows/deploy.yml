@@ -45,6 +45,12 @@ jobs:
         #   terraform_wrapper: false
         #   terraform_version: 1.2.9
 
+      - name: Print Secrets
+        run: |
+          echo ${{ secrets.AWS_ACCESS_KEY_ID }}
+          echo ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          echo ${{ vars.AWS_REGION }}
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
