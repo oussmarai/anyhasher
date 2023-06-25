@@ -44,15 +44,22 @@ jobs:
           echo ${{ github.run_id }}
           echo ${{ github.event.inputs.ref }}
           # This is a comment
+
+      - name: Use commit workspace
+        uses: dflook/terraform-new-workspace@v1
+        with:
+          path: util/terraform/backend
+          workspace: anyhasher-backend-${{ github.event.inputs.ref }}
       
       - name: Destroy Backend
         uses: dflook/terraform-destroy@v1
         with:
-          path: util/terraform/backend
           workspace: anyhasher-backend-${{ github.event.inputs.ref }}
+          auto_approve: true
+          path: util/terraform/backend
           variables: |
             instance_name = "anyhasher-backend-${{ github.event.inputs.ref }}"
-
+            
       # - name: Destroy Backend Infrastructure
       #   id: be_infra
       #   run: |
