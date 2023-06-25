@@ -23,11 +23,14 @@ concurrency:
 jobs:
   provision_backend:
     name: 🏢 Provision Backend Infrastructure
+
     runs-on: ubuntu-latest
+    
     outputs:
       backend_url: http://${{ steps.provision.outputs.ec2_public_url }}:5001
       backend_host: ${{ steps.provision.outputs.ec2_public_url }}
       # url: ${{ steps.be_infra.outputs.backend_url }}
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -41,7 +44,7 @@ jobs:
         #   terraform_version: 1.2.9
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1-node16
+        uses: aws-actions/configure-aws-credentials@v3-node16
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
