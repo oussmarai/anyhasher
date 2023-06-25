@@ -10,10 +10,8 @@ on:
 
   # This workflow is listening on other workflows to reach some sort of milestone or event (in this case, completed milestone on both Backend and Frontend CIs) 
   workflow_run:
-    - Backend CI
-    # - Frontend CI
-  types:
-    - completed
+    workflows: [Backend CI] # , Frontend CI
+    types: [completed]
 
 # This concurrency group for deploy is "prod-green"
 # TODO: I need to understand this more
