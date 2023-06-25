@@ -50,9 +50,9 @@ jobs:
           echo ${{ secrets.AWS_ACCESS_KEY_ID }}
           echo ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           echo ${{ vars.AWS_REGION }}
-          echo ${{ vars.SECRET_TEST }}
-          echo ${{ env.SECRET_TEST }}
-          echo ${{ secrets.SECRET_TEST }}
+          # echo ${{ vars.SECRET_TEST }}
+          # echo ${{ env.SECRET_TEST }}
+          # echo ${{ secrets.SECRET_TEST }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
