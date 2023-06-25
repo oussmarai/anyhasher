@@ -10,6 +10,9 @@ on:
   #     env_name:
   #       required: true
 
+concurrency:
+  group: ${{ github.run_id }}
+
 jobs:
   destroy_backend:
     name: ❌ Destroy Backend Infrastructure
@@ -37,6 +40,8 @@ jobs:
 
       - name: Print variables to STDOUT
         run: |
+          echo ${{ github.sha }}
+          echo ${{ github.run_id }}
           echo ${{ github.event.inputs.ref }}
           # This is a comment
       
