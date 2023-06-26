@@ -14,9 +14,9 @@ on:
         required: true
 
   # This workflow is listening on other workflows to reach some sort of milestone or event (in this case, completed milestone on both Backend and Frontend CIs)
-  workflow_run:
-    workflows: ["Deploy"] # , Frontend CI
-    types: [completed]
+  # workflow_run:
+  #   workflows: ["Deploy"] # , Frontend CI
+  #   types: [completed]
 
 concurrency:
   group: ${{ github.run_id }}
