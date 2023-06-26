@@ -12,8 +12,6 @@ on:
     inputs:
       ref:
         required: true
-      env_name:
-        required: true
 
   # This workflow is listening on other workflows to reach some sort of milestone or event (in this case, completed milestone on both Backend and Frontend CIs) 
   workflow_run:
@@ -113,3 +111,16 @@ jobs:
       #     echo "EC2_HOST=${EC2_PUBLIC_IP}" >> $GITHUB_ENV
       #     # Here, we are just making data available in another context (later we use these variables with Ansible and smoke testing)
       #     echo "::set-output name=backend_url::$EC2_PUBLIC_IP"
+
+  trigger_cleanup_on_failure:
+    name: ⛔ Start Cleanup for Failing Environment
+    needs:
+      [provision_backend]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: Cleanup
+          inputs: '{ "ref": "${{ github.event.inputs.ref }}", "env_name": "⛔ Detroy Green Env after Failed Deployment" }'

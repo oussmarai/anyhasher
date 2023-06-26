@@ -163,7 +163,20 @@ jobs:
       # - name: Perform Analysis
       #   uses: github/codeql-action/analyze@v1
 
-  # # Here, the CI part finished
+  trigger-deploy:
+    name: 🚚 Start Deployment
+    if: github.ref == 'refs/heads/main'
+    needs: [static-analysis]
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - name: Dispatch
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: Deploy
+          inputs: '{ "ref": "${{ github.sha }}" }'
+
+  # # Here, the CI part finished ###############################
   # # We will start the CD part by deploying to AWS Elastic Beanstalk
   # deploy_to_aws_eb:
   #   # This is very important to avoid deploying at each PR
