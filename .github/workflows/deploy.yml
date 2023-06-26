@@ -78,6 +78,7 @@ jobs:
           workspace: ec2-backend-${{ github.event.inputs.ref }}
 
       - name: Provision
+        continue-on-error: true
         id: provision
         uses: dflook/terraform-apply@v1
         with:
@@ -116,7 +117,12 @@ jobs:
     name: ⛔ Start Cleanup for Failing Environment
     needs:
       [provision_backend]
-    if: failure()
+    if: always()
+    # if: success()
+    # if: failure()
+    # if: success() || failure()
+    # if: '!cancelled()'
+
     runs-on: ubuntu-latest
     steps:
       - name: Dispatch
