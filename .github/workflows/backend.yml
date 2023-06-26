@@ -1,4 +1,4 @@
-name: Backend CI
+name: BackendCI
 run-name: "🛠️ CI: ${{ github.event.head_commit.message }} (${{ github.sha }})"
 on:
   push:
@@ -8,6 +8,8 @@ on:
     # branches:
     #   - main
     #   - l4
+    #   - 'releases/**'         # Including branch
+    #   - '!releases/**-alpha'  # Excluding branch
    
   pull_request:
     # paths:

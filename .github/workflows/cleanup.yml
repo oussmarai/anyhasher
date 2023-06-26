@@ -1,7 +1,10 @@
 name: Cleanup
 run-name: "❌ Destroy Infrastructure: ${{ github.event.inputs.env_name }} (${{ github.event.inputs.ref }})"
 on:
-  push:
+  # push:
+  #   branches:
+  #     - main
+  #     - 'releases/**'
 
   workflow_dispatch:
     inputs:
@@ -12,7 +15,7 @@ on:
 
   # This workflow is listening on other workflows to reach some sort of milestone or event (in this case, completed milestone on both Backend and Frontend CIs)
   workflow_run:
-    workflows: [Backend CI, Deploy] # , Frontend CI
+    workflows: ["Deploy"] # , Frontend CI
     types: [completed]
 
 concurrency:

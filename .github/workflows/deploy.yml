@@ -1,7 +1,10 @@
 name: Deploy
 run-name: "🚛 CD: Deploy Artifacts (${{ github.event.inputs.ref }})"
 on:
-  push:
+  # push:
+  #   branches:
+  #     - main
+  #     - 'releases/**'
 
   # Other workflows sending and triggering this workflow.
   # Also, trigger this manually on GitHub Actions using a button
@@ -14,7 +17,7 @@ on:
 
   # This workflow is listening on other workflows to reach some sort of milestone or event (in this case, completed milestone on both Backend and Frontend CIs) 
   workflow_run:
-    workflows: [Backend CI] # , Frontend CI
+    workflows: ["BackendCI"] # , Frontend CI
     types: [completed]
 
 # This concurrency group for deploy is "prod-green"
@@ -27,15 +30,17 @@ concurrency:
 jobs:
   provision_backend:
     name: 🏢 Provision Backend Infrastructure
-
     runs-on: ubuntu-latest
-    
     outputs:
       backend_url: http://${{ steps.provision.outputs.ec2_public_url }}:5001
       backend_host: ${{ steps.provision.outputs.ec2_public_url }}
       # url: ${{ steps.be_infra.outputs.backend_url }}
     
     steps:
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+      
       - name: Checkout
         uses: actions/checkout@v3
         with:
