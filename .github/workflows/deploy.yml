@@ -118,13 +118,14 @@ jobs:
 
   trigger_cleanup_on_failure:
     name: ⛔ Trigger Cleanup for Failing Environment
+    runs-on: ubuntu-latest
     needs: [provision_backend]
     if: always()
     # if: success()
     # if: failure()
     # if: success() || failure()
     # if: '!cancelled()'
-    runs-on: ubuntu-latest
+    permissions: write-all
     steps:      
       - name: Print the vars to STDOUT
         run: echo ${{ github.event.inputs.ref }}
