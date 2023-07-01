@@ -28,6 +28,15 @@ jobs:
     steps:
       - run: echo Need to hook up slack here!
 
+      - name: Print variables to STDOUT
+        run: |
+          echo destroy_backend job
+          echo ${{ github.sha }}
+          echo ${{ github.run_id }}
+          echo ${{ github.event.inputs.ref }}
+          echo ${{ github.event.inputs.env_name }}
+          # This is a comment
+
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -45,14 +54,6 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
-
-      - name: Print variables to STDOUT
-        run: |
-          echo ${{ github.sha }}
-          echo ${{ github.run_id }}
-          echo ${{ github.event.inputs.ref }}
-          echo ${{ github.event.inputs.env_name }}
-          # This is a comment
 
       # - name: Use commit workspace
       #   uses: dflook/terraform-new-workspace@v1
@@ -73,7 +74,8 @@ jobs:
         id: be_infra
         run: |
           cd util/terraform/backend
-          echo "instance_name=\"ec2-backend-${{ github.run_number }}\"" >> terraform.tfvars
+          echo "instance_name=\"ec2-backend-${{ github.event.inputs.ref }}\"" >> terraform.tfvars
+          cat terraform.tfvars
           terraform init
           terraform destroy -auto-approve
 
