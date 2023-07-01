@@ -127,15 +127,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:      
       - name: Print the vars to STDOUT
-        run: |
-          echo Input value (${{ github.event.inputs.ref }})
-          echo ${{ github.sha }}
-          echo ${{ github.run_id }}
-          echo ${{ github.workspace }}
-          echo ${{ secrets.AWS_ACCESS_KEY_ID }}
-          echo ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          echo ${{ vars.AWS_REGION }}
-          exit 0
+        run: echo ${{ github.event.inputs.ref }}
+          # echo ${{ github.sha }}
+          # echo ${{ github.run_id }}
+          # echo ${{ github.workspace }}
+          # echo ${{ secrets.AWS_ACCESS_KEY_ID }}
+          # echo ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          # echo ${{ vars.AWS_REGION }}
+          # exit 0
 
       - name: Dispatch
         uses: benc-uk/workflow-dispatch@v1
