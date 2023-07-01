@@ -128,7 +128,6 @@ jobs:
     steps:      
       - name: Print the vars to STDOUT
         run: |
-          echo trigger_cleanup_on_failure job
           echo Input value (${{ github.event.inputs.ref }})
           echo ${{ github.sha }}
           echo ${{ github.run_id }}
@@ -136,9 +135,6 @@ jobs:
           echo ${{ secrets.AWS_ACCESS_KEY_ID }}
           echo ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           echo ${{ vars.AWS_REGION }}
-          # echo ${{ vars.SECRET_TEST }}
-          # echo ${{ env.SECRET_TEST }}
-          # echo ${{ secrets.SECRET_TEST }}
 
       - name: Dispatch
         uses: benc-uk/workflow-dispatch@v1
