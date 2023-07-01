@@ -135,6 +135,7 @@ jobs:
           echo ${{ secrets.AWS_ACCESS_KEY_ID }}
           echo ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           echo ${{ vars.AWS_REGION }}
+          exit 0
 
       - name: Dispatch
         uses: benc-uk/workflow-dispatch@v1
