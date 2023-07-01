@@ -42,15 +42,15 @@ jobs:
         run: |
           echo provision_backend job
           echo Input value (${{ github.event.inputs.ref }})
-          echo ${{ github.sha }}
-          echo ${{ github.run_id }}
-          echo ${{ github.workspace }}
-          echo ${{ secrets.AWS_ACCESS_KEY_ID }}
-          echo ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          echo ${{ vars.AWS_REGION }}
-          # echo ${{ vars.SECRET_TEST }}
-          # echo ${{ env.SECRET_TEST }}
-          # echo ${{ secrets.SECRET_TEST }}
+          # echo ${{ github.sha }}
+          # echo ${{ github.run_id }}
+          # echo ${{ github.workspace }}
+          # echo ${{ secrets.AWS_ACCESS_KEY_ID }}
+          # echo ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          # echo ${{ vars.AWS_REGION }}
+          # # echo ${{ vars.SECRET_TEST }}
+          # # echo ${{ env.SECRET_TEST }}
+          # # echo ${{ secrets.SECRET_TEST }}
 
       - name: Checkout
         uses: actions/checkout@v3
