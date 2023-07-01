@@ -28,14 +28,14 @@ jobs:
     steps:
       - run: echo Need to hook up slack here!
 
-      - name: Print variables to STDOUT
-        run: |
-          echo destroy_backend job
-          echo ${{ github.sha }}
-          echo ${{ github.run_id }}
-          echo ${{ github.event.inputs.ref }}
-          echo ${{ github.event.inputs.env_name }}
-          # This is a comment
+      # - name: Print variables to STDOUT
+      #   run: |
+      #     echo destroy_backend job
+      #     echo ${{ github.sha }}
+      #     echo ${{ github.run_id }}
+      #     echo ${{ github.event.inputs.ref }}
+      #     echo ${{ github.event.inputs.env_name }}
+      #     # This is a comment
 
       - name: Checkout
         uses: actions/checkout@v3
