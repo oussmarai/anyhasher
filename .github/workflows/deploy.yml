@@ -149,7 +149,7 @@ jobs:
   trigger_verify:
     name: 🧪 Start Environment Verification
     needs:
-      [provision_frontend, deploy_frontend, provision_backend, deploy_backend]
+      [provision_backend, deploy_backend]
     runs-on: ubuntu-latest
     if: ${{ success() }}
     permissions: write-all
@@ -158,7 +158,7 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: Verify
-          inputs: '{ "backend_url": "${{ needs.provision_backend.outputs.backend_url }}", "frontend_url": "${{ needs.provision_frontend.outputs.frontend_url }}", "s3_bucket_hostname": "${{ needs.provision_frontend.outputs.s3_bucket_hostname }}", "ref": "${{ github.event.inputs.ref }}" }'
+          inputs: '{ "backend_url": "${{ needs.provision_backend.outputs.backend_url }}", "ref": "${{ github.event.inputs.ref }}" }' # , "frontend_url": "${{ needs.provision_frontend.outputs.frontend_url }}", "s3_bucket_hostname": "${{ needs.provision_frontend.outputs.s3_bucket_hostname }}"
 
   trigger_cleanup_on_failure:
     name: ⛔ Trigger Cleanup for Failing Environment
