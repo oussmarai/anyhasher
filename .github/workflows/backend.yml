@@ -165,9 +165,9 @@ jobs:
 
   trigger-deploy:
     name: 🚚 Start Deployment
+    runs-on: ubuntu-latest
     needs: [static-analysis]
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
     permissions: write-all
     steps:
       - name: Dispatch
