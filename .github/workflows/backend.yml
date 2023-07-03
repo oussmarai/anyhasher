@@ -57,7 +57,7 @@ jobs:
         # uses: actions/upload-artifact@v2
         uses: actions/upload-artifact@v3
         with:
-          name: backend-artifact
+          name: backend-artifact-${{ github.sha }}
           # name: backend-artifact-${{ github.sha }} # Dynamic file name
           path: backend/build/
 
