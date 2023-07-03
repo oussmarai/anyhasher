@@ -12,7 +12,7 @@ on:
       ref:
         required: true
 
-# jobs:
+jobs:
 #   frontend:
 #     name: 🧪 Check Frontend
 #     runs-on: ubuntu-latest
